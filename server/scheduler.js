@@ -1,5 +1,6 @@
 const cron = require('node-cron');
 const { checkPrice } = require('./priceChecker');
+const { sendAlertEmail } = require('./emailAlert');
 
 // In-memory list of tracked coins for now (Day 5 will move this to a database)
 const trackedCoins = [
@@ -17,6 +18,10 @@ async function runScheduledChecks() {
       console.log(
         `  ${result.coinId}: $${result.currentPrice} (threshold ${result.direction} ${result.threshold}) -> ${status}`
       );
+
+      if (result.triggered) {
+        await sendAlertEmail(result);
+      }
     } catch (error) {
       console.error(`  Error checking ${tracked.coinId}:`, error.message);
     }
