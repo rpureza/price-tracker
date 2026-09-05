@@ -3,7 +3,7 @@ import CoinList from './components/CoinList';
 import AddCoinForm from './components/AddCoinForm';
 import './App.css';
 
-const API_BASE = 'http://localhost:5000';
+const API_BASE = 'https://price-tracker-dkuw.onrender.com';
 
 function App() {
   const [coins, setCoins] = useState([]);
