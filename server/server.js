@@ -1,14 +1,21 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 require('dotenv').config();
 const { fetchCurrentPrice, checkPrice } = require('./priceChecker');
-const { startScheduler, runScheduledChecks, trackedCoins } = require('./scheduler');
+const { startScheduler, runScheduledChecks } = require('./scheduler');
+const Coin = require('./models/Coin');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('Connected to MongoDB'))
+  .catch((err) => console.error('MongoDB connection error:', err.message));
 
 app.get('/', (req, res) => {
   res.json({ status: 'Price Tracker API is running' });
@@ -45,8 +52,38 @@ app.get('/api/check', async (req, res) => {
   }
 });
 
-app.get('/api/tracked', (req, res) => {
-  res.json(trackedCoins);
+// Get all tracked coins
+app.get('/api/tracked', async (req, res) => {
+  try {
+    const coins = await Coin.find();
+    res.json(coins);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch tracked coins' });
+  }
+});
+
+// Add a new tracked coin
+app.post('/api/tracked', async (req, res) => {
+  const { coinId, threshold, direction } = req.body;
+  if (!coinId || !threshold || !direction) {
+    return res.status(400).json({ error: 'Missing coinId, threshold, or direction' });
+  }
+  try {
+    const newCoin = await Coin.create({ coinId, threshold, direction });
+    res.status(201).json(newCoin);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add tracked coin' });
+  }
+});
+
+// Delete a tracked coin
+app.delete('/api/tracked/:id', async (req, res) => {
+  try {
+    await Coin.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Coin removed from tracking' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete tracked coin' });
+  }
 });
 
 app.post('/api/check-now', async (req, res) => {

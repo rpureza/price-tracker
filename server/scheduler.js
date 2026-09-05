@@ -1,15 +1,12 @@
 const cron = require('node-cron');
 const { checkPrice } = require('./priceChecker');
 const { sendAlertEmail } = require('./emailAlert');
-
-// In-memory list of tracked coins for now (Day 5 will move this to a database)
-const trackedCoins = [
-  { coinId: 'bitcoin', threshold: 60000, direction: 'above' },
-  { coinId: 'ethereum', threshold: 2500, direction: 'below' }
-];
+const Coin = require('./models/Coin');
 
 async function runScheduledChecks() {
   console.log(`\n[${new Date().toISOString()}] Running scheduled price checks...`);
+
+  const trackedCoins = await Coin.find();
 
   for (const tracked of trackedCoins) {
     try {
@@ -33,4 +30,4 @@ function startScheduler() {
   console.log('Price check scheduler started (runs every 10 minutes)');
 }
 
-module.exports = { startScheduler, runScheduledChecks, trackedCoins };
+module.exports = { startScheduler, runScheduledChecks };
