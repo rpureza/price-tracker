@@ -43,4 +43,4 @@ function AddCoinForm({ onAdd }) {
   );
 }
 
-export default AddCoinForm;cl
+export default AddCoinForm;
